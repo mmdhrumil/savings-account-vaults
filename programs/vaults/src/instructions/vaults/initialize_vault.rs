@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
+use anchor_spl::token::{Mint, TokenAccount, Token};
 
 use crate::state::*;
 
@@ -9,7 +9,9 @@ pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()> {
         bump: *ctx.bumps.get("vault").unwrap(),
         owner: ctx.accounts.owner.key(),
         token: ctx.accounts.token.key(),
-        vault_key: ctx.accounts.vault_key.key()
+        token_vault_ac: ctx.accounts.token_vault_ac.key(),
+        vault_key: ctx.accounts.vault_key.key(),
+        balance: 0u64
     };
 
     Ok(())
@@ -38,6 +40,16 @@ pub struct InitializeVault<'info> {
         payer = owner
     )]
     pub vault: Account<'info, Vault>,
+
+    #[account(
+        init_if_needed,
+        payer = owner,
+        token::mint = token,
+        token::authority = vault
+    )]
+    pub token_vault_ac: Box<Account<'info, TokenAccount>>,
+
+    pub token_program: Program<'info, Token>,
 
     pub system_program: Program<'info, System>
 }
