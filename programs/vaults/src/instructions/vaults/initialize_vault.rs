@@ -5,13 +5,17 @@ use crate::state::*;
 
 pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()> {
 
+    let clock = Clock::get()?;
+    let current_timestamp = clock.unix_timestamp;
+
     *ctx.accounts.vault = Vault {
         bump: *ctx.bumps.get("vault").unwrap(),
         owner: ctx.accounts.owner.key(),
         token: ctx.accounts.token.key(),
         token_vault_ac: ctx.accounts.token_vault_ac.key(),
         vault_key: ctx.accounts.vault_key.key(),
-        balance: 0u64
+        balance: 0u64,
+        last_interest_timestamp: current_timestamp
     };
 
     Ok(())

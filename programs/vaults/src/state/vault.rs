@@ -14,9 +14,11 @@ pub struct Vault {
     pub token_vault_ac: Pubkey,
     pub vault_key: Pubkey,
 
-    pub balance: u64
+    pub balance: u64,
+
+    pub last_interest_timestamp: i64
 }
 
 impl Vault {
-    pub const LEN: usize = 8 + (1 * 1) + (32 * 4) + (8 * 1);
+    pub const LEN: usize = 8 + (1 * 1) + (32 * 4) + (8 * 2);
 }

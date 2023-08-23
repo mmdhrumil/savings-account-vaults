@@ -5,6 +5,7 @@ pub mod state;
 pub mod instructions;
 pub mod constants;
 pub mod errors;
+pub mod utils;
 
 declare_id!("5j3KuMK2u7KFtoEwiLTexUeooHq5NPQX96rYp5dhuze9");
 
@@ -23,5 +24,9 @@ pub mod vaults {
     
     pub fn withdraw_funds(ctx: Context<WithdrawFunds>, amount: u64) -> Result<()> {
         instructions::withdraw_funds(ctx, amount)
+    }
+
+    pub fn pay_interest(ctx: Context<PayInterest>) -> Result<()> {
+        instructions::pay_interest(ctx)
     }
 }
