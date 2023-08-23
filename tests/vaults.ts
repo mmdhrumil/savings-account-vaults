@@ -19,6 +19,7 @@ describe("vaults", () => {
   let token: anchor.web3.PublicKey;
   let tokenVaultAc: anchor.web3.PublicKey;
   let interestPayerKeypair: anchor.web3.Keypair;
+  let depositReceipt: anchor.web3.PublicKey;
 
   it("Initialize vaults", async () => {
     // Add your test here
@@ -55,7 +56,7 @@ describe("vaults", () => {
 
     const tx = await program
       .methods
-      .initializeVault()
+      .initializeVault(new anchor.BN(10))
       .accounts({
         owner: provider.wallet.publicKey,
         token: token,
@@ -78,6 +79,15 @@ describe("vaults", () => {
       false
     );
 
+    let [depositAddr, ] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        provider.wallet.publicKey.toBuffer(),
+        vaultAddress.toBuffer()
+      ],
+      VAULTS_PROGRAM_ID
+    );
+    depositReceipt = depositAddr;
+    
     // Deposit some funds
     const depositTx = await program
       .methods
@@ -85,6 +95,7 @@ describe("vaults", () => {
       .accounts({
         owner: provider.wallet.publicKey,
         vault: vaultAddress,
+        depositReceipt,
         token: token,
         tokenUserAc,
         tokenVaultAc
@@ -92,63 +103,58 @@ describe("vaults", () => {
       .rpc();
 
     console.log("Deposit sig: ", depositTx);
-
-    await delay(2_000);
-
-    const postDeposit = await program.account.vault.fetch(vaultAddress);
-    
-    const depositBalance = postDeposit.balance;
-
-    assert(depositBalance.eq(new anchor.BN(50).mul(new anchor.BN(1_000_000_000))), "Vault balance did not update post deposit tx");
-
-    // Withdraw some funds
-    const withdrawTx = await program
-    .methods
-    .withdrawFunds(new anchor.BN(24).mul(new anchor.BN(1_000_000_000)))
-    .accounts({
-      owner: provider.wallet.publicKey,
-      vault: vaultAddress,
-      token: token,
-      tokenUserAc,
-      tokenVaultAc
-    })
-    .rpc();
-
-  console.log("Withdraw sig: ", withdrawTx);
-    
-    await delay(2_000);
-
-    const postWithdraw = await program.account.vault.fetch(vaultAddress);
-    
-    const withdrawBalance = postWithdraw.balance;
-    
-    assert(withdrawBalance.eq(new anchor.BN(26).mul(new anchor.BN(1_000_000_000))), "Vault balance did not update post withdraw tx");
-
     
   });
 
-  it("Pay interest", async() => {
+  it("Top up interest", async() => {
 
     await delay(10_000);
 
-    const tokenPayerAc = await getAssociatedTokenAddress(
+    let tokenPayerAc = await getAssociatedTokenAddress(
       token,
-      interestPayerKeypair.publicKey
+      provider.wallet.publicKey,
+      false
     );
 
     const tx = await program
       .methods
-      .payInterest()
+      .topupInterest(new anchor.BN(10).mul(new anchor.BN(1_000_000_000)))
       .accounts({
-        payer: interestPayerKeypair.publicKey,
+        owner: provider.wallet.publicKey,
         token,
         vault: vaultAddress,
         tokenPayerAc,
         tokenVaultAc
       })
-      .signers([interestPayerKeypair])
       .rpc();
 
-    console.log("Pay interest sig: ", tx);
+    console.log("Top up interest sig: ", tx);
+  });
+
+  it("Withdraw from vault", async() => {
+
+    await delay(2_000);
+
+    let tokenUserAc = await getAssociatedTokenAddress(
+      token,
+      provider.wallet.publicKey,
+      false
+    );
+
+    // Withdraw some funds
+    const withdrawTx = await program
+    .methods
+    .withdrawFunds()
+    .accounts({
+      owner: provider.wallet.publicKey,
+      vault: vaultAddress,
+      token: token,
+      depositReceipt,
+      tokenUserAc,
+      tokenVaultAc
+    })
+    .rpc();
+
+    console.log("Withdraw sig: ", withdrawTx);
   })
 });

@@ -1,14 +1,14 @@
 use crate::constants::{STD_DAYS_IN_MONTH, STD_SECONDS_IN_DAY};
 
 pub fn calculate_interest(
-    last_interest_timestamp: u64,
+    deposit_timestamp: u64,
     current_timestamp: u64,
     vault_balance: u64,
     interest_per_month: u64
 ) -> u64 {
-    assert!(current_timestamp >= last_interest_timestamp);
+    assert!(current_timestamp >= deposit_timestamp);
 
-    let duration_diff = current_timestamp - last_interest_timestamp;
+    let duration_diff = current_timestamp - deposit_timestamp;
 
     let interest_amount = (interest_per_month as u128)
     .checked_mul(vault_balance as u128).unwrap()

@@ -3,7 +3,10 @@ use anchor_spl::token::{Mint, TokenAccount, Token};
 
 use crate::state::*;
 
-pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()> {
+pub fn initialize_vault(
+    ctx: Context<InitializeVault>,
+    interest_per_month_in_pct: u64
+) -> Result<()> {
 
     let clock = Clock::get()?;
     let current_timestamp = clock.unix_timestamp;
@@ -14,7 +17,9 @@ pub fn initialize_vault(ctx: Context<InitializeVault>) -> Result<()> {
         token: ctx.accounts.token.key(),
         token_vault_ac: ctx.accounts.token_vault_ac.key(),
         vault_key: ctx.accounts.vault_key.key(),
-        balance: 0u64,
+        total_deposits: 0u64,
+        interest_reserves: 0u64,
+        interest_per_month_in_pct,
         last_interest_timestamp: current_timestamp
     };
 
